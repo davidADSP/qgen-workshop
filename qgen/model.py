@@ -82,7 +82,7 @@ saver = tf.train.Saver()
 session = tf.InteractiveSession()
 writer = tf.summary.FileWriter(log_dir, session.graph)
 
-EPOCHS = 5
+EPOCHS = 10
 
 epoch = 0
 for i in range(1, EPOCHS + 1):

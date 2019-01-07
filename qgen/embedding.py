@@ -14,11 +14,12 @@ def _add_word(word):
     _idx_to_word.append(word)
     return idx
 
-
+PADDING_WORD = "<PAD>"
 UNKNOWN_WORD = "<UNK>"
 START_WORD = "<START>"
 END_WORD = "<END>"
 
+PADDING_TOKEN = _add_word(PADDING_WORD)
 UNKNOWN_TOKEN = _add_word(UNKNOWN_WORD)
 START_TOKEN = _add_word(START_WORD)
 END_TOKEN = _add_word(END_WORD)
@@ -40,13 +41,18 @@ with open(embeddings_path) as f:
     f.seek(0)
 
     vocab_size = sum(1 for line in f)
-    vocab_size += 3
+    vocab_size += 4 #3 
     f.seek(0)
 
     glove = np.ndarray((vocab_size, dimensions), dtype=np.float32)
-    glove[UNKNOWN_TOKEN] = np.zeros(dimensions)
-    glove[START_TOKEN] = -np.ones(dimensions)
-    glove[END_TOKEN] = np.ones(dimensions)
+    glove[PADDING_TOKEN] = np.random.normal(0, 0.02, dimensions)
+    glove[UNKNOWN_TOKEN] = np.random.normal(0, 0.02, dimensions)
+    glove[START_TOKEN] = np.random.normal(0, 0.02, dimensions)
+    glove[END_TOKEN] = np.random.normal(0, 0.02, dimensions)
+
+    # glove[UNKNOWN_TOKEN] = np.zeros(dimensions)
+    # glove[START_TOKEN] = -np.ones(dimensions)
+    # glove[END_TOKEN] = np.ones(dimensions)
 
     for line in f:
         chunks = line.split(" ")

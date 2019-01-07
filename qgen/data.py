@@ -4,12 +4,15 @@ from collections import Counter
 
 import csv
 
+import random
+
 import numpy as np
 
 from qgen.embedding import look_up_word, START_WORD, END_WORD
 
 
 _MAX_BATCH_SIZE = 128
+_MAX_DOC_LENGTH = 200
 
 
 def _tokenize(string):
@@ -125,7 +128,10 @@ def expand_answers(batch, answers):
                 split_answers[-1].append(j)
                 last = j
 
-        for answer_indices in split_answers:
+        if len(split_answers) > 0:
+
+            answer_indices = split_answers[0]
+        # for answer_indices in split_answers:
             document_id = batch["document_ids"][i]
             document_text = batch["document_text"][i]
             document_words = batch["document_words"][i]
@@ -136,6 +142,16 @@ def expand_answers(batch, answers):
                 "document_words": document_words,
                 "answer_text": answer_text,
                 "answer_indices": answer_indices,
+                "question_text": "",
+                "question_words": [],
+            })
+        else:
+            new_batch.append({
+                "document_id": batch["document_ids"][i],
+                "document_text": batch["document_text"][i],
+                "document_words": batch["document_words"][i],
+                "answer_text": "",
+                "answer_indices": [],
                 "question_text": "",
                 "question_words": [],
             })
@@ -164,6 +180,7 @@ def _read_data(path):
                 document_words = existing_stories[0]["document_words"]
             else:
                 document_words = _tokenize(document_text)
+                document_words = document_words[:_MAX_DOC_LENGTH]
 
             question_text = row[2]
             question_words = _tokenize(question_text)
@@ -172,29 +189,37 @@ def _read_data(path):
             answer_indices = []
             for chunk in answer.split(","):
                 start, end = (int(index) for index in chunk.split(":"))
-                answer_indices.extend(range(start, end))
+                if end < _MAX_DOC_LENGTH:
+                    answer_indices.extend(range(start, end))
             answer_text = " ".join(document_words[i] for i in answer_indices)
 
-            existing_stories.append({
-                "document_id": document_id,
-                "document_text": document_text,
-                "document_words": document_words,
-                "answer_text": answer_text,
-                "answer_indices": answer_indices,
-                "question_text": question_text,
-                "question_words": question_words,
-            })
+            if len(answer_indices) > 0:
+                existing_stories.append({
+                    "document_id": document_id,
+                    "document_text": document_text,
+                    "document_words": document_words,
+                    "answer_text": answer_text,
+                    "answer_indices": answer_indices,
+                    "question_text": question_text,
+                    "question_words": question_words,
+                })
+
+     
 
     return stories
 
 
 def _process_stories(stories):
     batch = []
-    for story in stories.values():
+    vals = list(stories.values())
+    random.shuffle(vals)
+
+    for story in vals:
         if len(batch) + len(story) > _MAX_BATCH_SIZE:
             yield _prepare_batch(batch)
             batch = []
         batch.extend(story)
+
     if batch:
         yield _prepare_batch(batch)
 
