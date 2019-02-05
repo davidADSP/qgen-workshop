@@ -229,14 +229,12 @@ _test_stories = None
 
 def _load_training_stories():
     global _training_stories
-    if not _training_stories:
-        _training_stories = _read_data("train.csv")
+    _training_stories = _read_data("train.csv")
     return _training_stories
 
 def _load_test_stories():
     global _test_stories
-    if not _test_stories:
-        _test_stories = _read_data("test.csv")
+    _test_stories = _read_data("test2.csv")
     return _test_stories
 
 def training_data():
